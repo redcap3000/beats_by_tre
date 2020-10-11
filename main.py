@@ -7,16 +7,18 @@ import time
 from decimal import *
 
 from sense_hat import SenseHat
-from datetime import datetime
 
 sense = SenseHat()
-datetime.now()
 sense.set_imu_config(False, False, True)
 
-getcontext().prec = 16
-global isHundy,ifHundy
+##getcontext().prec = 32
+global isHundy,ifHundy,prevTime
 
 isHundy = False
+
+def get_time():
+    return str(time.time())
+    return datetime.datetime.utcnow().timestamp()
 
 def get_change(current, previous):
     if current == previous:
@@ -36,15 +38,23 @@ def get_sense_data():
 	return accel
 	return sense_data
 
+
+##def determineSymbol(axis,value):
+	## TODO>?!
+##	if axis == 'x':
+##	elif axis == 'y':
+##	elif axis == 'z':
+##	return value
+
 def ifHundy(n,rawN):
 	if n == '100' :
 		isHundy = True
 		return '*'
 	elif '{0:.0g}'.format(rawN) == '0.0':
-		return ' '
+		return '0'
 	else :
 		return ' ' 
-##		return '{0:.0g}'.format(rawN)
+		##return '{0:.3g}'.format(rawN)
 
 def formAccelData(d):
         nAccel = sense.get_accelerometer_raw()
@@ -67,8 +77,18 @@ def formAccelData(d):
 	
 	zOutput = ifHundy(zForm,z)
 	#if isHundy == True :
-	#if xOutput == '*' or zOutput == '*' or yOutput == '*':
-	print( '\t' + xOutput +' '+ zOutput+zOutput + ' ' + yOutput+yOutput+yOutput)
+	if xOutput == '*' and zOutput == '*' and yOutput == '*':
+		##print("\t\n\tBUMPPP")
+		xOutput = '!!!!'
+		zOutput = ' '
+		yOutput = ' ' 
+	## uhhh do this better plz.
+	elif xOutput == '*' and zOutput == '*' or xOutput == '*' and xOutput == '*' or zOutput == '*' and xOutput == '*':
+		#print("\t\nTAPPPP")
+		xOutput = '!!!'
+		zOutput = ' '
+		yOutput = ' '
+	print( get_time() + '\t|' + xOutput +  zOutput +  yOutput)
         ##else :
         ##        print(d['x'],d['y'],d['z'])	
 while True:
@@ -81,6 +101,6 @@ while True:
 	##else:
 	##	print('accel does not exist')
 	
-	#time.sleep(1/)
+	time.sleep(1/1.75)
 	##print(get_sense_data())
 
