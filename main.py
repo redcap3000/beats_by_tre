@@ -41,7 +41,7 @@ def ifHundy(n,rawN):
 		isHundy = True
 		return '*'
 	elif '{0:.0g}'.format(rawN) == '0.0':
-		return '-'
+		return ' '
 	else :
 		return ' ' 
 ##		return '{0:.0g}'.format(rawN)
@@ -66,8 +66,9 @@ def formAccelData(d):
 	zForm = dFormat.format(z)
 	
 	zOutput = ifHundy(zForm,z)
-	##if isHundy == True :
-	print( xOutput+' ' +zOutput +' ' +yOutput)
+	#if isHundy == True :
+	#if xOutput == '*' or zOutput == '*' or yOutput == '*':
+	print( '\t' + xOutput +' '+ zOutput+zOutput + ' ' + yOutput+yOutput+yOutput)
         ##else :
         ##        print(d['x'],d['y'],d['z'])	
 while True:
@@ -80,6 +81,6 @@ while True:
 	##else:
 	##	print('accel does not exist')
 	
-	time.sleep(1/1.75)
+	#time.sleep(1/)
 	##print(get_sense_data())
 
