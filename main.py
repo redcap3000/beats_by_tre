@@ -4,6 +4,7 @@
 ## and to hide data that isn't 'moving much'
 
 import time
+import datetime
 from decimal import *
 
 from sense_hat import SenseHat
@@ -14,24 +15,34 @@ sense.set_imu_config(False, False, True)
 
 import pymongo
 
-
+accelDict = {
+	'   ' : 0,
+	'*  ' : 1,
+        ' * ' : 2,
+	'  *' : 3,
+	'** ' : 4,
+	' **' : 5,
+	'* *' : 6,
+	'!'   : 7
+}
 
 ##getcontext().prec = 32
 global isHundy,ifHundy,prevTime
 
 isHundy = False
 
-def insertRecord(unixTime,x,y,z,xRaw,yRaw,zRaw):
+def insertRecord(x,y,z,xRaw,yRaw,zRaw):
 	myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
 	mydb = myclient["Beats_by_tre"]
 	mycol = mydb["sense_accel_diff"]
 	mycol2= mydb["sense_accel_raw"]
-	r = mycol.insert_one({"ut":unixTime,"x":x,"y":y,"z":z})
-	r2 = mycol2.insert_one({"ut":unixTime,"x":xRaw,"y":yRaw,"z":zRaw})
+	timestamp = datetime.datetime.utcnow() 
+	compAccel = x+y+z
+	##accelDict[compAccel]
+	r = mycol.insert_one({"t":timestamp,"d":compAccel})
+	r2 = mycol2.insert_one({"t":timestamp,"x":xRaw,"y":yRaw,"z":zRaw})
 	return true
-##	print(r,r2)
-
 
 def get_time():
     return str(time.time())
@@ -46,14 +57,8 @@ def get_change(current, previous):
         return 0
 
 def get_sense_data():
-	sense_data = []
-	##sense_data.append(sense.get_temperature())
-	sense_data.append(sense.get_pressure())
 	accel = sense.get_accelerometer_raw()
-	
-	##sense_data.append(sense.get_humidity())
 	return accel
-	return sense_data
 
 
 ##def determineSymbol(axis,value):
@@ -79,49 +84,30 @@ def formAccelData(d):
 	isHundy = False
 	
 	x = get_change(nAccel['x'],d['x'])
-	xForm = dFormat.format(x)
 	
-	xOutput = ifHundy(xForm,x)
+	xOutput = ifHundy(dFormat.format(x),x)
 
 	y = get_change(nAccel['y'],d['y'])
-	yForm = dFormat.format(y)
 
 	
-	yOutput = ifHundy(yForm,y)
+	yOutput = ifHundy(dFormat.format(y),y)
 
 	z = get_change(nAccel['z'],d['z'])
-	zForm = dFormat.format(z)
 	
-	zOutput = ifHundy(zForm,z)
+	zOutput = ifHundy(dFormat.format(z),z)
 
 
 	#if isHundy == True :
 	if xOutput == '*' and zOutput == '*' and yOutput == '*':
 		##print("\t\n\tBUMPPP")
-		xOutput = '!!!!'
-		zOutput = ' '
-		yOutput = ' ' 
+		xOutput = '!'
+		zOutput = '!'
+		yOutput = '!' 
 	## uhhh do this better plz.
-	##elif xOutput == '*' and zOutput == '*' or xOutput == '*' and xOutput == '*' or zOutput == '*' and xOutput == '*':
-		#print("\t\nTAPPPP")
-	##	xOutput = '!!!'
-	##	zOutput = ' '
-	##	yOutput = ' '
-	print( get_time() + '\t|' + xOutput +  zOutput +  yOutput)
-	insertRecord(get_time(),xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
-
-        ##else :
-        ##        print(d['x'],d['y'],d['z'])	
+	print(  '|' + xOutput +  zOutput +  yOutput)
+	insertRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
 while True:
 	try:
 		formAccelData(accel)
 	except NameError:
 		accel = sense.get_accelerometer_raw()
-	##if 'accel' in globals():
-	##	print('accel exists')
-	##else:
-	##	print('accel does not exist')
-	
-	##time.sleep(1/1.75)
-	##print(get_sense_data())
-
