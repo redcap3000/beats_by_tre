@@ -11,10 +11,27 @@ from sense_hat import SenseHat
 sense = SenseHat()
 sense.set_imu_config(False, False, True)
 
+
+import pymongo
+
+
+
 ##getcontext().prec = 32
 global isHundy,ifHundy,prevTime
 
 isHundy = False
+
+def insertRecord(unixTime,x,y,z,xRaw,yRaw,zRaw):
+	myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+
+	mydb = myclient["Beats_by_tre"]
+	mycol = mydb["sense_accel_diff"]
+	mycol2= mydb["sense_accel_raw"]
+	r = mycol.insert_one({"ut":unixTime,"x":x,"y":y,"z":z})
+	r2 = mycol2.insert_one({"ut":unixTime,"x":xRaw,"y":yRaw,"z":zRaw})
+	return true
+##	print(r,r2)
+
 
 def get_time():
     return str(time.time())
@@ -76,6 +93,8 @@ def formAccelData(d):
 	zForm = dFormat.format(z)
 	
 	zOutput = ifHundy(zForm,z)
+
+
 	#if isHundy == True :
 	if xOutput == '*' and zOutput == '*' and yOutput == '*':
 		##print("\t\n\tBUMPPP")
@@ -83,12 +102,14 @@ def formAccelData(d):
 		zOutput = ' '
 		yOutput = ' ' 
 	## uhhh do this better plz.
-	elif xOutput == '*' and zOutput == '*' or xOutput == '*' and xOutput == '*' or zOutput == '*' and xOutput == '*':
+	##elif xOutput == '*' and zOutput == '*' or xOutput == '*' and xOutput == '*' or zOutput == '*' and xOutput == '*':
 		#print("\t\nTAPPPP")
-		xOutput = '!!!'
-		zOutput = ' '
-		yOutput = ' '
+	##	xOutput = '!!!'
+	##	zOutput = ' '
+	##	yOutput = ' '
 	print( get_time() + '\t|' + xOutput +  zOutput +  yOutput)
+	insertRecord(get_time(),xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
+
         ##else :
         ##        print(d['x'],d['y'],d['z'])	
 while True:
@@ -101,6 +122,6 @@ while True:
 	##else:
 	##	print('accel does not exist')
 	
-	time.sleep(1/1.75)
+	##time.sleep(1/1.75)
 	##print(get_sense_data())
 
