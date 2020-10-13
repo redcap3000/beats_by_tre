@@ -2,7 +2,10 @@
 ## the idea is to limit the amount of output shown to give an idea of min/max tolerances
 ## ideally when it is triggered permit a seconds of 'lets check this sound out' to show all data
 ## and to hide data that isn't 'moving much'
-
+## I think the 'ideal' location would be somewhere that does not receive a lot of vibrations from the room that it is in, but should be receving 'external' vibrations.
+## reguardless of where it is placed it should be on or near the floor on a hard surface.
+## kind of based on a 'wah' moment i.e. notating periods of identical readings (rare) 
+## completely not based on any sort of science but from sensations on my feet
 import time
 import datetime
 from decimal import *
@@ -27,26 +30,25 @@ accelDict = {
 }
 
 ##getcontext().prec = 32
-global isHundy,ifHundy,prevTime
+global isHundy,ifHundy,prevTime,myclient,mydb,mycol,showOutput
 
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["Beats_by_tre"]
+mycol = mydb["sense_accel_diff"]
+showOutput = True
 isHundy = False
 
 def insertRecord(x,y,z,xRaw,yRaw,zRaw):
-	myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
-	mydb = myclient["Beats_by_tre"]
-	mycol = mydb["sense_accel_diff"]
-	mycol2= mydb["sense_accel_raw"]
+	##mycol2= mydb["sense_accel_raw"]
 	timestamp = datetime.datetime.utcnow() 
-	compAccel = x+y+z
 	##accelDict[compAccel]
-	r = mycol.insert_one({"t":timestamp,"d":compAccel})
-	r2 = mycol2.insert_one({"t":timestamp,"x":xRaw,"y":yRaw,"z":zRaw})
-	return true
+	if x == '!' and y == '!' and z == '!':
+		y = ''
+		z = ''
+	return mycol.insert_one({"t":timestamp,"d":x+y+z,"x":xRaw,"y":yRaw,"z":zRaw})
+	##r2 = mycol2.insert_one({"t":timestamp,"x":xRaw,"y":yRaw,"z":zRaw})
 
-def get_time():
-    return str(time.time())
-    return datetime.datetime.utcnow().timestamp()
 
 def get_change(current, previous):
     if current == previous:
@@ -84,30 +86,30 @@ def formAccelData(d):
 	isHundy = False
 	
 	x = get_change(nAccel['x'],d['x'])
-	
 	xOutput = ifHundy(dFormat.format(x),x)
-
+	
 	y = get_change(nAccel['y'],d['y'])
-
-	
 	yOutput = ifHundy(dFormat.format(y),y)
-
-	z = get_change(nAccel['z'],d['z'])
 	
+	z = get_change(nAccel['z'],d['z'])
 	zOutput = ifHundy(dFormat.format(z),z)
-
-
-	#if isHundy == True :
+	
 	if xOutput == '*' and zOutput == '*' and yOutput == '*':
-		##print("\t\n\tBUMPPP")
 		xOutput = '!'
 		zOutput = '!'
 		yOutput = '!' 
 	## uhhh do this better plz.
-	print(  '|' + xOutput +  zOutput +  yOutput)
+	if showOutput:
+		print(  '|' + xOutput +  zOutput +  yOutput)
+	## data insert
 	insertRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
+
+## todo 
+## main loop
 while True:
 	try:
+		## check for keypress to toggle output display
 		formAccelData(accel)
+		## use query to show when last '!!!' occured
 	except NameError:
 		accel = sense.get_accelerometer_raw()
