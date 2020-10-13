@@ -16,16 +16,11 @@ redis_host = "localhost"
 redis_port = 6379
 redis_password = ""
 
-def redis_conn():
-        try:
-                Redis = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
-                ##r.set("msg:hello","Hello Redis!!!")
-                ##msg = r.get("msg:hello")
-                ##print(msg)
-        except Exception as e:
-                print(e)
-if __name__ == '__main__':
-    redis_conn()
+try:
+	Redis = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+except Exception as e:
+        print(e)
+
 
 
 import time
@@ -59,16 +54,17 @@ global isHundy,ifHundy,prevTime,myclient,mydb,mycol,showOutput
 ##mycol = mydb["sense_accel_diff"]
 showOutput = True
 isHundy = False
+print(Redis)
 
 def insertRRecord(x,y,z,xRaw,yRaw,zRaw):
-	rKey = datetime.datetime.utcnow()
+	rKey = str(time.time())
 	redisData = {
 			"t":rKey,
 			"x":xRaw,
 			"y":yRaw,
 			"z":zRaw,
 			"d":x+y+z}
-	Redis.hmset(rKey, redisData)	
+	return Redis.hmset(rKey, redisData)	
 
 ##def insertRecord(x,y,z,xRaw,yRaw,zRaw):
 
