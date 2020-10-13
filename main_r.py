@@ -6,6 +6,28 @@
 ## reguardless of where it is placed it should be on or near the floor on a hard surface.
 ## kind of based on a 'wah' moment i.e. notating periods of identical readings (rare) 
 ## completely not based on any sort of science but from sensations on my feet
+
+
+import redis
+## do this really need to be global?
+global Redis,redis_host,redis_port,redis_password
+
+redis_host = "localhost"
+redis_port = 6379
+redis_password = ""
+
+def redis_conn():
+        try:
+                Redis = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+                ##r.set("msg:hello","Hello Redis!!!")
+                ##msg = r.get("msg:hello")
+                ##print(msg)
+        except Exception as e:
+                print(e)
+if __name__ == '__main__':
+    redis_conn()
+
+
 import time
 import datetime
 from decimal import *
@@ -32,31 +54,41 @@ accelDict = {
 ##getcontext().prec = 32
 global isHundy,ifHundy,prevTime,myclient,mydb,mycol,showOutput
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["Beats_by_tre"]
-mycol = mydb["sense_accel_diff"]
+##myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+##mydb = myclient["Beats_by_tre"]
+##mycol = mydb["sense_accel_diff"]
 showOutput = True
 isHundy = False
 
-def insertRecord(x,y,z,xRaw,yRaw,zRaw):
+def insertRRecord(x,y,z,xRaw,yRaw,zRaw):
+	rKey = datetime.datetime.utcnow()
+	redisData = {
+			"t":rKey,
+			"x":xRaw,
+			"y":yRaw,
+			"z":zRaw,
+			"d":x+y+z}
+	Redis.hmset(rKey, redisData)	
+
+##def insertRecord(x,y,z,xRaw,yRaw,zRaw):
 
 	##mycol2= mydb["sense_accel_raw"]
-	timestamp = datetime.datetime.utcnow() 
+	##timestamp = datetime.datetime.utcnow() 
 	##accelDict[compAccel]
-	if x == '!' and y == '!' and z == '!':
-		y = ''
-		z = ''
-	elif x == ' ' and y == ' ' and z == ' ':
-		x = ''
-		y = ''
-		z = ''
-	elif x == '*' and y == ' ' and z == ' ':
-		y = ''
-		z = ''
-	elif y == '*' and z == ' ':
-		z = ''
+	##if x == '!' and y == '!' and z == '!':
+	##	y = ''
+	##	z = ''
+	##elif x == ' ' and y == ' ' and z == ' ':
+	##	x = ''
+	##	y = ''
+	##	z = ''
+	##elif x == '*' and y == ' ' and z == ' ':
+	##	y = ''
+	##	z = ''
+	##elif y == '*' and z == ' ':
+	##	z = ''
 	
-	return mycol.insert_one({"t":timestamp,"d":x+y+z,"a":[xRaw,yRaw,zRaw]})
+	##return mycol.insert_one({"t":timestamp,"d":x+y+z,"a":[xRaw,yRaw,zRaw]})
 	##r2 = mycol2.insert_one({"t":timestamp,"x":xRaw,"y":yRaw,"z":zRaw})
 
 
@@ -112,7 +144,8 @@ def formAccelData(d):
 	if showOutput:
 		print(  '|' + xOutput +  zOutput +  yOutput)
 	## data insert
-	insertRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
+	insertRRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
+	##insertRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
 
 ## todo 
 ## main loop
