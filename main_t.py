@@ -1,9 +1,26 @@
-import os
 import time
 import datetime
 from decimal import *
 
 from sense_hat import SenseHat
+
+
+
+import subprocess
+import os
+## python 2.7 'hack' for supressing cli output and running commands in background
+## should eventually develop a queue to avoid sending blink commands at more than
+## once per second, but ideally not more than three times per four seconds (so each blink
+## can have a chance of registering)
+
+def subProcTry(cmd,arg1,arg2,arg3,arg4):
+	try:
+		with open(os.devnull, 'w') as fp:
+		
+			completed = subprocess.Popen([str(cmd),str(arg1),str(arg2),str(arg3),str(arg4)],stdout=fp)
+	
+	except subprocess.CalledProcessError as err:
+		print('ERROR:',err)
 
 sense = SenseHat()
 sense.set_imu_config(False, False, True)
@@ -11,7 +28,7 @@ sense.set_imu_config(False, False, True)
 ##getcontext().prec = 32
 global isHundy,ifHundy,showOutput
 
-showOutput = True
+showOutput = False
 isHundy = False
 
 def get_change(current, previous):
@@ -37,7 +54,7 @@ def ifHundy(n,rawN):
 		return ' ' 
 
 def tpBlink(tpHost,blinkCount,blinkRate):
-	return os.system('tplink-smarthome-api blink ' + tpHost + ' ' + str(blinkCount) + ' ' + str(blinkRate)+ '&')
+	return subProcTry('tplink-smarthome-api', 'blink', tpHost, blinkCount, blinkRate)
 
 
 def formAccelData(d):
@@ -58,12 +75,15 @@ def formAccelData(d):
 		xOutput = '!'
 		zOutput = '!'
 		yOutput = '!' 
-		tpBlink('10.0.0.2',2,1)
-		##os.system('tplink-smarthome-api blink 10.0.0.2 3 .5&')
+		## want to show minimal output for cpu cycles
+		if showOutput:
+			print('!!!')
+		tpBlink('10.0.0.2',2,0)
 	## uhhh do this better plz.
 	elif (xOutput == '*' and yOutput == '*') or (yOutput == '*' and zOutput == '*') or (xOutput =='*' and yOutput == '*'):
+		if showOutput:
+			print('!!')
 		tpBlink('10.0.0.2',1,0)
-		os.system('tplink-smartphone-api blink ' + tpHost + ' ' + str(tpBlinkCount) + str(tpBlinkRate))
 	
 	if showOutput:
 		print(  '|' + xOutput +  zOutput +  yOutput)
