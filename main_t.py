@@ -18,9 +18,8 @@ def subProcTry(cmd,arg1,arg2,arg3,arg4):
 		with open(os.devnull, 'w') as fp:
 		
 			completed = subprocess.Popen([str(cmd),str(arg1),str(arg2),str(arg3),str(arg4)],stdout=fp)
-	
 	except subprocess.CalledProcessError as err:
-		print('ERROR:',err)
+		print('ERROR:',err)	
 
 sense = SenseHat()
 sense.set_imu_config(False, False, True)
@@ -78,13 +77,14 @@ def formAccelData(d):
 		## want to show minimal output for cpu cycles
 		if showOutput:
 			print('!!!')
-		tpBlink('10.0.0.2',2,0)
+		tpBlink('10.0.0.2',2,1)
+		##tpBlink('10.0.0.10',2,1)
 	## uhhh do this better plz.
 	elif (xOutput == '*' and yOutput == '*') or (yOutput == '*' and zOutput == '*') or (xOutput =='*' and yOutput == '*'):
 		if showOutput:
 			print('!!')
-		tpBlink('10.0.0.2',1,0)
-	
+		tpBlink('10.0.0.2',1,.5)
+		##tpBlink('10.0.0.10',1,.5)	
 	if showOutput:
 		print(  '|' + xOutput +  zOutput +  yOutput)
 	## data insert
@@ -95,6 +95,7 @@ while True:
 	try:
 		## check for keypress to toggle output display
 		formAccelData(accel)
+		time.sleep(.25)
 		## use query to show when last '!!!' occured
 	except NameError:
 		accel = sense.get_accelerometer_raw()
