@@ -1,4 +1,7 @@
 import redis
+## for running redis zadd commands 'properly'
+import os
+##import subprocess
 global Redis,redis_host,redis_port,redis_password
 
 redis_host = "localhost"
@@ -30,8 +33,17 @@ showOutput = True
 isHundy = False
 
 def insertRRecord(x,y,z,xRaw,yRaw,zRaw):
-	rKey = str(time.time())
-	return Redis.hmset(rKey, {"t":rKey,"x":xRaw,"y":yRaw,"z":zRaw,"d":x+y+z})	
+	rKey = time.time() 
+	newKey = str(rKey)
+	## DO BETTER....
+	print(Redis.set(newKey+"_X",rawX))
+	print(Redis.set(newKey+"_Y",rawY))
+	print(Redis.set(newKey+"_Z",rawZ))
+	
+	return True
+         ## query with below, gives array odd values are keys(x,y,z val), even are scores(date)
+	 ## ZREVRANGEBYSCORE acRx +inf -inf WITHSCORES
+##	return Redis.hmset(rKey, {"t":rKey,"x":xRaw,"y":yRaw,"z":zRaw,"d":x+y+z})	
 def get_change(current, previous):
     if current == previous:
         return 100.0
@@ -72,11 +84,12 @@ def formAccelData(d):
 		xOutput = '!'
 		zOutput = '!'
 		yOutput = '!' 
+		os.system('tplink-smarthome-api blink 10.0.0.2 1 1&')
 	## uhhh do this better plz.
 	if showOutput:
 		print(  '|' + xOutput +  zOutput +  yOutput)
 	## data insert
-	insertRRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
+	##insertRRecord(xOutput,zOutput,yOutput,d['x'],d['y'],d['z'])
 
 ## main loop
 while True:
